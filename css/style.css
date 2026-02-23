@@ -1,20 +1,244 @@
-* {
+/* ── Reset ─────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
-body {
+html, body {
+  width: 100%;
+  height: 100%;
   background: #000;
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* ── 전체 레이아웃 래퍼 ──────────────────────────────────────────────────── */
+#wrapper {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── 게임 캔버스 영역 ─────────────────────────────────────────────────────── */
+#gameArea {
+  flex: 1;
+  min-height: 0;          /* flex 축소 허용 */
+  display: flex;
   align-items: center;
-  min-height: 100vh;
+  justify-content: center;
   overflow: hidden;
 }
 
 #gameCanvas {
   display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+}
+
+/* ── 터치 컨트롤 바 (기본: 숨김 / 터치 기기에서만 표시) ──────────────────── */
+#touchControls {
+  display: none;
+  flex-shrink: 0;
+  height: 170px;
+  background: #080808;
+  border-top: 1px solid #1a1a1a;
+}
+
+/* 터치 포인터 기기에서만 컨트롤 표시 */
+@media (pointer: coarse) {
+  #touchControls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+/* ── 왼쪽: 조이스틱 영역 ──────────────────────────────────────────────────── */
+#leftControl {
+  position: relative;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  touch-action: none;
+}
+
+#joystickBase {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  /* transform: translate(-50%, -50%) 은 JS에서 처리 */
+  transition: opacity 0.08s;
+}
+
+#joystickBase.active {
+  opacity: 1;
+}
+
+#joystickKnob {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 38%,
+    rgba(255,255,255,0.55),
+    rgba(255,255,255,0.18));
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 10px rgba(255,255,255,0.1);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* ── 오른쪽: 액션 버튼 영역 ──────────────────────────────────────────────── */
+#rightControl {
+  width: 50%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  touch-action: none;
+}
+
+.gameBtn {
+  border: none;
+  border-radius: 50%;
+  font-family: monospace;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+  touch-action: none;
+  letter-spacing: 0.04em;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.06s, opacity 0.06s;
+}
+
+.gameBtn:active {
+  transform: scale(0.90) !important;
+  opacity: 0.85;
+}
+
+/* FIRE 버튼 */
+.fire-btn {
+  width: 88px;
+  height: 88px;
+  font-size: 14px;
+  background: radial-gradient(circle at 38% 38%, #ff5555, #880000);
+  border: 2px solid rgba(255, 100, 100, 0.45);
+  box-shadow: 0 0 12px rgba(255, 40, 40, 0.25);
+}
+
+.fire-btn.pressed {
+  background: radial-gradient(circle at 38% 38%, #ff8888, #cc2222);
+}
+
+/* LOOP 버튼 */
+.loop-btn {
+  width: 66px;
+  height: 66px;
+  font-size: 11px;
+  background: radial-gradient(circle at 38% 38%, #5599ff, #001880);
+  border: 2px solid rgba(100, 160, 255, 0.45);
+  box-shadow: 0 0 10px rgba(40, 100, 255, 0.20);
+}
+
+/* ── 일시정지 버튼 (게임 캔버스 위 고정, 터치 기기 전용) ────────────────── */
+#btnPause {
+  display: none;
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.55);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-family: monospace;
+  cursor: pointer;
+  z-index: 200;
+  touch-action: none;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 2px;
+}
+
+@media (pointer: coarse) {
+  #btnPause {
+    display: flex;
+  }
+}
+
+/* ── 가로 모드 레이아웃 ──────────────────────────────────────────────────── */
+@media (orientation: landscape) and (pointer: coarse) {
+  #wrapper {
+    flex-direction: row;
+  }
+
+  #touchControls {
+    width: 190px;
+    height: 100%;
+    flex-direction: column;
+    justify-content: space-around;
+    border-top: none;
+    border-left: 1px solid #1a1a1a;
+    padding: 16px 0;
+  }
+
+  #leftControl {
+    width: 100%;
+    height: 50%;
+  }
+
+  #rightControl {
+    width: 100%;
+    height: 50%;
+    flex-direction: row;
+    gap: 12px;
+  }
+}
+
+/* ── 아주 작은 화면 (h < 500px 가로 모드 등) ─────────────────────────────── */
+@media (max-height: 420px) and (pointer: coarse) {
+  #touchControls {
+    height: 130px;
+  }
+
+  .fire-btn {
+    width: 72px;
+    height: 72px;
+    font-size: 12px;
+  }
+
+  .loop-btn {
+    width: 54px;
+    height: 54px;
+    font-size: 10px;
+  }
+
+  #joystickBase {
+    width: 90px;
+    height: 90px;
+  }
+
+  #joystickKnob {
+    width: 40px;
+    height: 40px;
+  }
 }

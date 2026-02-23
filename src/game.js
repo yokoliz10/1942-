@@ -1,5 +1,6 @@
 import { Renderer }           from './engine/renderer.js';
 import { Input }              from './engine/input.js';
+import { TouchControls }      from './engine/touchControls.js';
 import { SoundManager }       from './engine/soundManager.js';
 import { ScoreManager }       from './systems/scoreManager.js';
 import { TitleScene }         from './scenes/titleScene.js';
@@ -22,11 +23,21 @@ export class Game {
       gameOver:      new GameOverScene(this),
     };
 
-    this._currentScene = null;
-    this._accumulator  = 0;
-    this._lastTime     = 0;
-    this._rafId        = null;
-    this._running      = false;
+    this._currentScene  = null;
+    this._accumulator   = 0;
+    this._lastTime      = 0;
+    this._rafId         = null;
+    this._running       = false;
+
+    // 터치 컨트롤 (DOM이 준비된 후 자동으로 연결)
+    this._touchControls = new TouchControls(this.input);
+
+    // iOS/Android: 첫 터치에서 AudioContext 자동 재개
+    const resumeAudio = () => {
+      this.soundManager.resume();
+      document.removeEventListener('touchstart', resumeAudio);
+    };
+    document.addEventListener('touchstart', resumeAudio, { once: true });
   }
 
   start() {

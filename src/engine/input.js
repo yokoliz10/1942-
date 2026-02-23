@@ -1,15 +1,16 @@
 export class Input {
   constructor() {
-    this._keys    = new Set();
-    this._pressed = new Set(); // keys that went down THIS frame
+    this._keys     = new Set();
+    this._pressed  = new Set(); // 이번 프레임에 눌린 키
     this._released = new Set();
 
+    // 터치 컨트롤이 주입하는 가상 키 상태
+    this._vKeys    = new Set();
+    this._vPressed = new Set(); // 이번 프레임에 가상으로 눌린 키
+
     this._onKeyDown = (e) => {
-      if (!this._keys.has(e.code)) {
-        this._pressed.add(e.code);
-      }
+      if (!this._keys.has(e.code)) this._pressed.add(e.code);
       this._keys.add(e.code);
-      // Prevent arrow keys / space from scrolling the page
       if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) {
         e.preventDefault();
       }
@@ -22,64 +23,35 @@ export class Input {
 
     window.addEventListener('keydown', this._onKeyDown);
     window.addEventListener('keyup',   this._onKeyUp);
-
-    // Touch support (virtual d-pad via touch position)
-    this._touch = { active: false, x: 0, y: 0 };
-    this._setupTouch();
   }
 
-  _setupTouch() {
-    const canvas = document.getElementById('gameCanvas');
-    if (!canvas) return;
-
-    canvas.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      const t = e.touches[0];
-      this._touch = { active: true, x: t.clientX, y: t.clientY, startX: t.clientX, startY: t.clientY };
-    }, { passive: false });
-
-    canvas.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      const t = e.touches[0];
-      this._touch.x = t.clientX;
-      this._touch.y = t.clientY;
-    }, { passive: false });
-
-    canvas.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      this._touch.active = false;
-    }, { passive: false });
+  // TouchControls에서 호출 — 가상 키 상태를 주입
+  // down=true 이면 "이번 프레임에 눌림"도 등록 (rising edge만)
+  setVirtualKey(code, down) {
+    const wasDown = this._vKeys.has(code);
+    if (down && !wasDown) this._vPressed.add(code); // rising edge
+    if (down) this._vKeys.add(code);
+    else      this._vKeys.delete(code);
   }
 
-  // Call at the END of each frame to clear per-frame sets
+  // 프레임 끝에 호출 — per-frame 세트 초기화
   update() {
     this._pressed.clear();
     this._released.clear();
+    this._vPressed.clear();
   }
 
-  isDown(code)     { return this._keys.has(code); }
-  isPressed(code)  { return this._pressed.has(code); }
+  isDown(code)     { return this._keys.has(code) || this._vKeys.has(code); }
+  isPressed(code)  { return this._pressed.has(code) || this._vPressed.has(code); }
   isReleased(code) { return this._released.has(code); }
 
-  // Convenience directional helpers
+  // ── 편의 게터 ───────────────────────────────────────────────────────────
   get left()  { return this.isDown('ArrowLeft')  || this.isDown('KeyA'); }
   get right() { return this.isDown('ArrowRight') || this.isDown('KeyD'); }
   get up()    { return this.isDown('ArrowUp')    || this.isDown('KeyW'); }
   get down()  { return this.isDown('ArrowDown')  || this.isDown('KeyS'); }
   get fire()  { return this.isDown('Space')      || this.isDown('KeyX'); }
   get loop()  { return this.isPressed('KeyZ'); }
-
-  // Touch-derived directional input (dead-zone ±10 px)
-  get touchDX() {
-    if (!this._touch.active) return 0;
-    const d = this._touch.x - this._touch.startX;
-    return Math.abs(d) > 10 ? Math.sign(d) : 0;
-  }
-  get touchDY() {
-    if (!this._touch.active) return 0;
-    const d = this._touch.y - this._touch.startY;
-    return Math.abs(d) > 10 ? Math.sign(d) : 0;
-  }
 
   destroy() {
     window.removeEventListener('keydown', this._onKeyDown);

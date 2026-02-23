@@ -2,12 +2,40 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>1942</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <canvas id="gameCanvas"></canvas>
+  <div id="wrapper">
+    <!-- 게임 캔버스 영역 -->
+    <div id="gameArea">
+      <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <!-- 터치 컨트롤 (모바일에서만 표시) -->
+    <div id="touchControls" aria-hidden="true">
+      <!-- 왼쪽: 플로팅 조이스틱 -->
+      <div id="leftControl">
+        <div id="joystickBase">
+          <div id="joystickKnob"></div>
+        </div>
+      </div>
+
+      <!-- 오른쪽: 액션 버튼 -->
+      <div id="rightControl">
+        <button id="btnLoop"  class="gameBtn loop-btn">LOOP</button>
+        <button id="btnFire"  class="gameBtn fire-btn">FIRE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 일시정지 버튼 (터치 기기에서 게임 캔버스 위에 표시) -->
+  <button id="btnPause" aria-label="Pause">&#9646;&#9646;</button>
+
   <script type="module" src="src/main.js"></script>
 </body>
 </html>
