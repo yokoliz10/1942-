@@ -2,7 +2,15 @@
 
 캡콤의 1942(1984) 아케이드 게임을 HTML5 Canvas + ES Modules로 재현한 프로젝트.
 
-## 실행 방법
+## 🕹️ 바로 플레이
+
+**https://withusps-coder.github.io/1942/**
+
+설치 없이 브라우저에서 바로 플레이 가능합니다.
+
+## 로컬 개발 환경
+
+ES Modules는 `file://` 프로토콜에서 동작하지 않으므로 로컬 서버가 필요합니다.
 
 ```bash
 # Node.js / npx
@@ -12,16 +20,17 @@ npx serve .
 python3 -m http.server 8080
 ```
 
-브라우저에서 `http://localhost:8080` (또는 serve가 출력하는 포트) 열기.
+브라우저에서 `http://localhost:8080` 열기.
 
 ## 조작키
 
 | 키 | 동작 |
 |----|------|
 | 화살표 / WASD | 이동 |
-| Space / Z | 발사 |
-| X / Shift | 루프 기동 (무적 + 회전) |
+| Space | 발사 |
+| Z / Shift | 루프 기동 (무적 + 회전) |
 | P / ESC | 일시 정지 |
+| M | 음소거 토글 |
 
 ## 프로젝트 구조
 
