@@ -1,15 +1,77 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>1942</title>
-  <link rel="stylesheet" href="css/style.css" />
+<!-- GemiLi PWA 战神装甲 -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
-<body>
+<!-- 🚀 GemiLi 方案A：全屏拖拽 + 自动开火 + 双击翻滚 🚀 -->
+    <script>
+      // 唤醒 PWA
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+
+      // 绝密魔法：模拟真实键盘按压
+      function triggerKey(type, code, keyCode) {
+          let e = new KeyboardEvent(type, { bubbles: true, cancelable: true, code: code, key: code });
+          Object.defineProperty(e, 'keyCode', {get: () => keyCode});
+          window.dispatchEvent(e);
+      }
+
+      let lastX = 0, lastY = 0;
+      let lastTapTime = 0;
+      let moveKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+
+      // 1. 全自动无限开火 (每 80 毫秒按一次空格)
+      setInterval(() => {
+          triggerKey('keydown', 'Space', 32);
+          setTimeout(() => triggerKey('keyup', 'Space', 32), 20);
+      }, 80);
+
+      // 2. 接管屏幕触摸
+      document.addEventListener('touchstart', (e) => {
+          e.preventDefault(); // 强行屏蔽原作者可能留下的触控逻辑
+          lastX = e.touches[0].clientX;
+          lastY = e.touches[0].clientY;
+
+          // 3. 双击触发 Z 键 (翻滚闪避)
+          const now = Date.now();
+          if (now - lastTapTime < 300) {
+              triggerKey('keydown', 'KeyZ', 90);
+              setTimeout(() => triggerKey('keyup', 'KeyZ', 90), 100);
+          }
+          lastTapTime = now;
+      }, { passive: false });
+
+      // 4. 相对拖拽，转换成方向键
+      document.addEventListener('touchmove', (e) => {
+          e.preventDefault();
+          const currentX = e.touches[0].clientX;
+          const currentY = e.touches[0].clientY;
+          const dx = currentX - lastX;
+          const dy = currentY - lastY;
+
+          // 先松开所有方向键
+          moveKeys.forEach(k => triggerKey('keyup', k, 0));
+
+          // 根据滑动差值，按下对应的方向键 (灵敏度可调，目前是 3 像素差值)
+          if (dx < -3) triggerKey('keydown', 'ArrowLeft', 37);
+          if (dx > 3) triggerKey('keydown', 'ArrowRight', 39);
+          if (dy < -3) triggerKey('keydown', 'ArrowUp', 38);
+          if (dy > 3) triggerKey('keydown', 'ArrowDown', 40);
+
+          lastX = currentX;
+          lastY = currentY;
+      }, { passive: false });
+
+      // 5. 手指离开，松开摇杆
+      document.addEventListener('touchend', (e) => {
+          e.preventDefault();
+          moveKeys.forEach(k => triggerKey('keyup', k, 0));
+      });
+    </script>
+  <body>
   <div id="wrapper">
     <!-- 게임 캔버스 영역 -->
     <div id="gameArea">
