@@ -1,6 +1,7 @@
 // Original arcade resolution
 export const NATIVE_WIDTH  = 224;
-export const NATIVE_HEIGHT = 256;
+// 🚀 GemiLi 魔法：将原版 256 的高度强行拉长，完美适配现代修长手机！
+export const NATIVE_HEIGHT = 480; // 主公，如果觉得还不够长可以改为 500，觉得太长可以改回 420
 
 // Display scale factor
 export const SCALE = 3;
