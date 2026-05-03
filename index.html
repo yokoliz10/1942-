@@ -139,6 +139,19 @@
             e.preventDefault();
             moveKeys.forEach(k => triggerKey('keyup', k, 0));
         });
+        // 6. 接管屏幕触摸 & 触发战歌
+  let musicStarted = false; // 记录音乐是否已经启动
+  document.addEventListener('touchstart', (e) => {
+      e.preventDefault(); 
+
+      // 🎺 军师魔法：第一下触摸屏幕时，战歌起！
+      if (!musicStarted) {
+          document.getElementById('war-music').play().catch(e => console.log("等待用户交互"));
+          musicStarted = true;
+      }
+
+      lastX = e.touches[0].clientX;
+      lastY = e.touches[0].clientY;
     </script>
 </body>
 <!-- 隐藏的战歌播放器，loop 代表无限循环 -->
