@@ -1,6 +1,6 @@
 import { Renderer }           from './engine/renderer.js';
 import { Input }              from './engine/input.js';
-import { TouchControls }      from './engine/touchControls.js';
+// ⚠️ 军师刀法：删除了原版 TouchControls 的导入
 import { SoundManager }       from './engine/soundManager.js';
 import { ScoreManager }       from './systems/scoreManager.js';
 import { TitleScene }         from './scenes/titleScene.js';
@@ -29,12 +29,12 @@ export class Game {
     this._rafId         = null;
     this._running       = false;
 
-    // 터치 컨트롤 (DOM이 준비된 후 자동으로 연결)
-    this._touchControls = new TouchControls(this.input);
+    // ⚠️ 军师刀法：彻底阉割了原版按键生成逻辑
 
-    // iOS/Android: 첫 터치에서 AudioContext 자동 재개
+    // iOS/Android: 启动时直接屏蔽原版音乐！给咱们的专属 BGM 让路！
     const resumeAudio = () => {
       this.soundManager.resume();
+      this.soundManager.toggleMute(); // 强制静音原版音乐引擎！
       document.removeEventListener('touchstart', resumeAudio);
     };
     document.addEventListener('touchstart', resumeAudio, { once: true });
@@ -58,23 +58,20 @@ export class Game {
   _loop(timestamp) {
     if (!this._running) return;
 
-    const dt = Math.min((timestamp - this._lastTime) / 1000, 0.1); // cap at 100ms
+    const dt = Math.min((timestamp - this._lastTime) / 1000, 0.1); 
     this._lastTime = timestamp;
 
-    this._accumulator += dt * 1000; // convert to ms
+    this._accumulator += dt * 1000; 
 
-    // Fixed-timestep update (consume accumulated time in chunks)
     while (this._accumulator >= FIXED_TIMESTEP) {
-      // M키 — 전역 음소거 토글 (모든 씬에서 동작)
       if (this.input.isPressed('KeyM')) {
         this.soundManager.toggleMute();
       }
       this._currentScene?.update(FIXED_TIMESTEP / 1000);
-      this.input.update(); // flush per-frame keys AFTER scene update
+      this.input.update(); 
       this._accumulator -= FIXED_TIMESTEP;
     }
 
-    // Render at display frame rate
     this.renderer.clear('#000000');
     this._currentScene?.render(this.renderer);
 
