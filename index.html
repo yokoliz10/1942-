@@ -3,16 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>GemiLi 1942</title>
-    <!-- 强行加上随机数防缓存 -->
-    <link rel="manifest" href="./manifest.json?v=888">
-    <link rel="apple-touch-icon" href="./icon.png?v=888">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="./icon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
+    
     <style>
-        /* 斩草除根隐藏丑陋按键 */
-        #touchControls, #btnPause, #leftControl, #rightControl { display: none !important; }
+        /* 物理超度一切旧按键！ */
+        #touchControls, #btnPause, #leftControl, #rightControl, .controls, button { display: none !important; }
         body, html {
             background-color: #000000 !important; display: flex; justify-content: center; align-items: center;
             width: 100vw; height: 100vh; margin: 0; padding: 0; overflow: hidden; touch-action: none;
@@ -27,38 +24,35 @@
 <body>
     <div id="wrapper">
         <div id="gameArea"><canvas id="gameCanvas"></canvas></div>
-        <!-- 留个空壳防止原版报错 -->
-        <div id="touchControls" aria-hidden="true" style="display:none;"><div id="leftControl"></div><div id="rightControl"></div></div>
     </div>
 
-    <!-- 🎶 播放主公专属 BGM 🎶 -->
-    <audio id="war-music" src="./bgm.mp3?v=888" loop></audio>
+    <!-- 🎶 主公专属音响 🎶 -->
+    <audio id="war-music" src="./bgm.mp3" loop></audio>
 
-    <script type="module" src="src/main.js?v=888"></script>
+    <script type="module" src="src/main.js"></script>
 
-    <!-- 🚀 GemiLi 终极操控法则 🚀 -->
     <script>
-        // 注销一切旧缓存
+        // 注销缓存幽灵！
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(regs => {
-                for(let r of regs) r.unregister();
-            });
+            navigator.serviceWorker.getRegistrations().then(regs => { for(let r of regs) r.unregister(); });
         }
 
-        function triggerKey(type, code) {
-            window.dispatchEvent(new KeyboardEvent(type, { bubbles: true, cancelable: true, code: code, key: code }));
+        // 强力按键模拟器 (带 keyCode 防止老引擎不识别)
+        function triggerKey(type, code, keyCode) {
+            let e = new KeyboardEvent(type, { bubbles: true, cancelable: true, code: code, key: code });
+            Object.defineProperty(e, 'keyCode', {get: () => keyCode});
+            window.dispatchEvent(e);
         }
 
         let activeKeys = new Set();
-        function updateKey(code, isDown) {
-            if (isDown && !activeKeys.has(code)) { triggerKey('keydown', code); activeKeys.add(code); }
-            else if (!isDown && activeKeys.has(code)) { triggerKey('keyup', code); activeKeys.delete(code); }
+        function updateKey(code, keyCode, isDown) {
+            if (isDown && !activeKeys.has(code)) { triggerKey('keydown', code, keyCode); activeKeys.add(code); }
+            else if (!isDown && activeKeys.has(code)) { triggerKey('keyup', code, keyCode); activeKeys.delete(code); }
         }
 
         let startX = 0, startY = 0;
         let lastTapTime = 0;
         let isStarted = false;
-
         const bgm = document.getElementById('war-music');
 
         window.addEventListener('touchstart', (e) => {
@@ -67,25 +61,25 @@
             startY = e.touches[0].clientY;
 
             if (!isStarted) {
-                // 回车开局
-                triggerKey('keydown', 'Enter'); setTimeout(() => triggerKey('keyup', 'Enter'), 100);
-                // BGM 响起！
+                // 模拟敲击回车，越过主菜单
+                triggerKey('keydown', 'Enter', 13); setTimeout(() => triggerKey('keyup', 'Enter', 13), 100);
                 if (bgm) bgm.play().catch(()=>{});
-                // 自动开火启动
+                // 全自动无限开火
                 setInterval(() => {
-                    triggerKey('keydown', 'Space'); setTimeout(() => triggerKey('keyup', 'Space'), 20);
+                    triggerKey('keydown', 'Space', 32); setTimeout(() => triggerKey('keyup', 'Space', 32), 20);
                 }, 80);
                 isStarted = true;
             }
 
-            // 双击翻滚！
+            // 双击屏幕翻滚 (Z键)
             const now = Date.now();
             if (now - lastTapTime < 300) {
-                triggerKey('keydown', 'KeyZ'); setTimeout(() => triggerKey('keyup', 'KeyZ'), 100);
+                triggerKey('keydown', 'KeyZ', 90); setTimeout(() => triggerKey('keyup', 'KeyZ', 90), 100);
             }
             lastTapTime = now;
         }, { passive: false });
 
+        // 丝滑相对滑动
         window.addEventListener('touchmove', (e) => {
             e.preventDefault();
             let currentX = e.touches[0].clientX;
@@ -93,20 +87,20 @@
             let dx = currentX - startX;
             let dy = currentY - startY;
 
-            // 丝滑相对拖拽控制飞行
-            if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
-                updateKey('ArrowLeft', dx < -6);
-                updateKey('ArrowRight', dx > 6);
-                updateKey('ArrowUp', dy < -6);
-                updateKey('ArrowDown', dy > 6);
-                startX = currentX;
-                startY = currentY;
-            }
+            updateKey('ArrowLeft', 37, dx < -5);
+            updateKey('ArrowRight', 39, dx > 5);
+            updateKey('ArrowUp', 38, dy < -5);
+            updateKey('ArrowDown', 40, dy > 5);
+
+            // 更新摇杆原点，实现无限拖拽
+            startX = currentX;
+            startY = currentY;
         }, { passive: false });
 
         window.addEventListener('touchend', (e) => {
             e.preventDefault();
-            ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].forEach(k => updateKey(k, false)); 
+            updateKey('ArrowLeft', 37, false); updateKey('ArrowRight', 39, false);
+            updateKey('ArrowUp', 38, false); updateKey('ArrowDown', 40, false);
         }, { passive: false });
     </script>
 </body>
