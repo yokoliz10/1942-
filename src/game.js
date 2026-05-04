@@ -1,6 +1,5 @@
 import { Renderer }           from './engine/renderer.js';
 import { Input }              from './engine/input.js';
-// ⚠️ 军师刀法：删除了原版 TouchControls 的导入
 import { SoundManager }       from './engine/soundManager.js';
 import { ScoreManager }       from './systems/scoreManager.js';
 import { TitleScene }         from './scenes/titleScene.js';
@@ -29,12 +28,12 @@ export class Game {
     this._rafId         = null;
     this._running       = false;
 
-    // ⚠️ 军师刀法：彻底阉割了原版按键生成逻辑
+    // 军师刀法：原作者的 touchControls 已经被末将连根拔起！
 
-    // iOS/Android: 启动时直接屏蔽原版音乐！给咱们的专属 BGM 让路！
+    // iOS/Android: 启动时静音原版音乐
     const resumeAudio = () => {
       this.soundManager.resume();
-      this.soundManager.toggleMute(); // 强制静音原版音乐引擎！
+      this.soundManager.toggleMute(); 
       document.removeEventListener('touchstart', resumeAudio);
     };
     document.addEventListener('touchstart', resumeAudio, { once: true });
@@ -60,13 +59,10 @@ export class Game {
 
     const dt = Math.min((timestamp - this._lastTime) / 1000, 0.1); 
     this._lastTime = timestamp;
-
     this._accumulator += dt * 1000; 
 
     while (this._accumulator >= FIXED_TIMESTEP) {
-      if (this.input.isPressed('KeyM')) {
-        this.soundManager.toggleMute();
-      }
+      if (this.input.isPressed('KeyM')) this.soundManager.toggleMute();
       this._currentScene?.update(FIXED_TIMESTEP / 1000);
       this.input.update(); 
       this._accumulator -= FIXED_TIMESTEP;
@@ -74,7 +70,6 @@ export class Game {
 
     this.renderer.clear('#000000');
     this._currentScene?.render(this.renderer);
-
     this._rafId = requestAnimationFrame((ts) => this._loop(ts));
   }
 
